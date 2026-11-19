@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_planner/app/app.dart';
@@ -10,6 +10,7 @@ void main() {
     // the widget-test fake-async zone); data providers are stubbed empty.
     await tester.pumpWidget(ProviderScope(
       overrides: [
+        settingsProvider.overrideWith((ref) => Stream.value(<String, String>{})),
         recipesProvider.overrideWith((ref) => Stream.value([])),
         categoriesProvider.overrideWith((ref) => Stream.value([])),
         ingredientsProvider.overrideWith((ref) => Stream.value([])),
@@ -23,3 +24,4 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 }
+

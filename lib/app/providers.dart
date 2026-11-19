@@ -1,6 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:path/path.dart' as p;
+
+import '../data/app_paths.dart';
+import '../data/backup_service.dart';
 import '../data/db/database.dart';
 import '../data/meal_repository.dart';
 import '../data/planner_service.dart';
@@ -15,15 +19,15 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   return db;
 });
 
-class ThemeModeNotifier extends Notifier<ThemeMode> {
-  @override
-  ThemeMode build() => ThemeMode.system;
-
-  void set(ThemeMode mode) => state = mode;
-}
-
-final themeModeProvider =
-    NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
+/// Theme mode from settings (system by default).
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  final v = (ref.watch(settingsProvider).value ?? const {})[SettingKeys.themeMode];
+  return switch (v) {
+    'light' => ThemeMode.light,
+    'dark' => ThemeMode.dark,
+    _ => ThemeMode.system,
+  };
+});
 
 final recipeRepositoryProvider =
     Provider((ref) => RecipeRepository(ref.watch(databaseProvider)));
@@ -67,3 +71,14 @@ final plannerServiceProvider = Provider((ref) => PlannerService(
 /// First day of week from settings (1 = Monday ... 7 = Sunday).
 final firstDayOfWeekProvider = Provider<int>((ref) =>
     int.tryParse((ref.watch(settingsProvider).value ?? const {})['calendar.firstDayOfWeek'] ?? '') ?? 1);
+
+final backupServiceProvider = Provider((ref) {
+  final docs = AppPaths.docsDirSync!;
+  return BackupService(
+      db: ref.watch(databaseProvider),
+      docsDir: docs,
+      dbFile: p.join(docs, AppPaths.dbFileName));
+});
+
+bool settingFlag(Map<String, String> m, String key, {bool defaultValue = true}) =>
+    m[key] == null ? defaultValue : m[key] == 'true';

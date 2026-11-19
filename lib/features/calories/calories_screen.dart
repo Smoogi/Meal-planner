@@ -53,6 +53,7 @@ class _CaloriesScreenState extends ConsumerState<CaloriesScreen> {
     final entries = ref.watch(entriesProvider((key, key))).value ?? const <MealEntry>[];
     final settings = ref.watch(settingsProvider).value ?? const {};
     final target = double.tryParse(settings[SettingKeys.calorieTarget] ?? '');
+    final showMacros = settingFlag(settings, SettingKeys.showMacros);
     final text = Theme.of(context).textTheme;
 
     final consumed = entries.where((e) => e.state == MealState.consumed).toList();
@@ -120,12 +121,14 @@ class _CaloriesScreenState extends ConsumerState<CaloriesScreen> {
                   Text('Target ${target.round()} kcal', style: text.bodySmall),
                 ],
                 const SizedBox(height: 12),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  _macro(context, 'Protein', sum((e) => e.protein)),
-                  _macro(context, 'Carbs', sum((e) => e.carbs)),
-                  _macro(context, 'Fat', sum((e) => e.fat)),
-                ]),
-                const SizedBox(height: 12),
+                if (showMacros) ...[
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    _macro(context, 'Protein', sum((e) => e.protein)),
+                    _macro(context, 'Carbs', sum((e) => e.carbs)),
+                    _macro(context, 'Fat', sum((e) => e.fat)),
+                  ]),
+                  const SizedBox(height: 12),
+                ],
                 for (final s in MealSlot.values)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
@@ -221,4 +224,5 @@ class _EntryTile extends StatelessWidget {
     );
   }
 }
+
 

@@ -1,6 +1,7 @@
 ﻿import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import '../app_paths.dart';
 import '../seed_ingredients.dart';
 import 'tables.dart';
 
@@ -23,7 +24,10 @@ part 'database.g.dart';
   AppSettings,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(driftDatabase(name: 'meal_planner'));
+  AppDatabase()
+      : super(driftDatabase(
+          name: 'meal_planner',
+          native: DriftNativeOptions(databasePath: AppPaths.dbPath)));
 
   /// For tests: pass an in-memory executor.
   AppDatabase.forTesting(super.executor);
@@ -88,4 +92,5 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 }
+
 

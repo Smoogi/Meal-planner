@@ -6,6 +6,8 @@ class SettingKeys {
   static const firstDayOfWeek = 'calendar.firstDayOfWeek'; // 1=Mon..7=Sun
   static const calorieTarget = 'calories.target'; // optional
   static const themeMode = 'appearance.themeMode'; // system|light|dark
+  static const calendarShowKcal = 'calendar.showKcal'; // default true
+  static const showMacros = 'calories.showMacros'; // default true
   static const cooldownDays = 'planner.cooldownDays';
   static const favoriteWeight = 'planner.favoriteWeight';
   static const discoveryWeight = 'planner.discoveryWeight';
@@ -39,5 +41,6 @@ class SettingsRepository {
     }
   }
 }
+
 
 

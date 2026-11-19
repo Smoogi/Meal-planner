@@ -7,7 +7,7 @@ Update this file whenever an architectural or release-process decision changes.
 ## Workflow rules
 - Work in phases; get approval before starting a new phase. Avoid unnecessary dependencies.
 - Phases: 1 Foundation, 2 Recipes, 3 Calendar, 4 Smart Planner, 5 Calories, 6 Settings/Backup, 7 Polish/Release.
-- Current status: **Phases 1-5 complete** (foundation; recipes/nutrition; calendar/meal entries; Smart Planner; calorie logging + statistics). Remaining: 6 Settings/Backup, 7 Release polish.
+- Current status: **Phases 1-6 complete** (foundation, recipes, calendar, Smart Planner, calories, settings, backup/restore). Remaining: Phase 7 (UI polish on a real device, performance check, first signed release).
 
 ## Architecture
 - Layers: `lib/data` (Drift DB, DAOs/repos) â†’ `lib/domain` (pure Dart: nutrition, units, planner engine; no Flutter imports) â†’ `lib/features/<tab>` (UI + Riverpod providers). `lib/app` = shell, theme, providers.
@@ -77,3 +77,14 @@ Unit tests for: nutrition calculation & unit conversion, planner constraints (co
 - Regenerate deletes only unlocked + planned entries in range. Leftovers link to a `prep_batches` row; a batch counts as a *preparation* only once one of its entries is prepared/consumed.
 - Open batches (cooked, portions left) are scheduled as leftovers first.
 
+
+
+## Backup / restore / settings
+- `lib/data/backup_service.dart`: zip = `manifest.json` (app id + schemaVersion) + `db.sqlite` (`VACUUM INTO` snapshot) + `images/`. Restore validates the manifest, rejects newer schemas, writes a `pre-restore-*.zip` safety backup in `<docs>/backups/`, closes the DB, swaps files; the UI then `ref.invalidate(databaseProvider)` so Drift reopens and migrates older backups.
+- DB file: `<app documents>/meal_planner.sqlite` (`lib/data/app_paths.dart`); images `<docs>/images/` (DB stores relative paths).
+- Settings are key/value strings in `app_settings` (keys in `SettingKeys`); theme, first day of week, calorie target, planner prefs, display toggles. Units are fixed metric/kcal (documented in Settings).
+
+## Open items before the first release
+- Create the Meal Planner keystore with the user's approval and write `android/key.properties` (see Android signing).
+- Try the app on a real device: image picking, share/restore file picker, calendar density on small screens.
+- Then `.\scripts\release.ps1 -Version 1.0.0 -DryRun` followed by the real run.

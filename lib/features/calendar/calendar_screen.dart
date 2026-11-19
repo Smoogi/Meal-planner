@@ -23,6 +23,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider).value ?? const {};
     final firstDow = int.tryParse(settings[SettingKeys.firstDayOfWeek] ?? '') ?? 1;
+    final showKcal = settingFlag(settings, SettingKeys.calendarShowKcal);
     final weekly = ref.watch(weeklyScheduleProvider).value ?? const <int, DayType>{};
     final overrides = ref.watch(dayOverridesProvider).value ?? const <String, DayOverride>{};
     final overrideTypes = {
@@ -109,6 +110,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       isToday: dateKey(addDays(gridStart, i)) == dateKey(today),
                       type: effectiveDayType(addDays(gridStart, i), weekly, overrideTypes),
                       isOverride: overrideTypes.containsKey(dateKey(addDays(gridStart, i))),
+                      showKcal: showKcal,
                       entries: byDate[dateKey(addDays(gridStart, i))] ?? const [],
                     ),
                 ],
@@ -149,8 +151,10 @@ class _DayCell extends StatelessWidget {
     required this.type,
     required this.isOverride,
     required this.entries,
+    this.showKcal = true,
   });
   final DateTime date;
+  final bool showKcal;
   final bool inMonth, isToday, isOverride;
   final DayType type;
   final List<MealEntry> entries;
@@ -209,7 +213,7 @@ class _DayCell extends StatelessWidget {
                       ),
                     ),
                 ]),
-                if (consumedKcal > 0)
+                if (showKcal && consumedKcal > 0)
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text('${consumedKcal.round()}',
@@ -223,3 +227,4 @@ class _DayCell extends StatelessWidget {
     );
   }
 }
+

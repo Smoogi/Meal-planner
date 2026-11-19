@@ -1,22 +1,19 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import '../../data/app_paths.dart';
 
 /// Recipe images live in `<app documents>/images/`; the database stores the
 /// path relative to the documents directory so backups/restores stay valid.
 class ImageStore {
-  static String? _docs;
-
-  static Future<String> docsDir() async =>
-      _docs ??= (await getApplicationDocumentsDirectory()).path;
+  static Future<String> docsDir() => AppPaths.docsDir();
 
   /// Must be called once at startup (see main.dart) so thumbnails resolve synchronously.
   static Future<void> init() async => docsDir();
 
   static String? resolveSync(String relative) =>
-      _docs == null ? null : p.join(_docs!, relative);
+      AppPaths.docsDirSync == null ? null : p.join(AppPaths.docsDirSync!, relative);
 
   /// Lets the user pick an image, copies it into the app folder, returns the relative path.
   static Future<String?> pickAndStore({ImageSource source = ImageSource.gallery}) async {
@@ -36,3 +33,4 @@ class ImageStore {
     if (await f.exists()) await f.delete();
   }
 }
+
