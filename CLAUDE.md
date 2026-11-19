@@ -7,7 +7,7 @@ Update this file whenever an architectural or release-process decision changes.
 ## Workflow rules
 - Work in phases; get approval before starting a new phase. Avoid unnecessary dependencies.
 - Phases: 1 Foundation, 2 Recipes, 3 Calendar, 4 Smart Planner, 5 Calories, 6 Settings/Backup, 7 Polish/Release.
-- Current status: **Phases 1-2 complete** (shell/DB/signing/release script; recipes, ingredients, categories, nutrition math, images).
+- Current status: **Phases 1-3 complete** (shell/DB/signing/release script; recipes, ingredients, nutrition; calendar, weekly schedule, day overrides, meal entries).
 
 ## Architecture
 - Layers: `lib/data` (Drift DB, DAOs/repos) â†’ `lib/domain` (pure Dart: nutrition, units, planner engine; no Flutter imports) â†’ `lib/features/<tab>` (UI + Riverpod providers). `lib/app` = shell, theme, providers.
@@ -67,3 +67,4 @@ Unit tests for: nutrition calculation & unit conversion, planner constraints (co
 ## Testing pitfalls
 - Drift/real async I/O does not run inside widget-test fake-async: widget tests must stub data providers (see test/widget_test.dart); DB logic is tested with AppDatabase.forTesting(NativeDatabase.memory()) in plain tests.
 - A hung test can leave lutter_tester.exe holding uild\native_assets\windows\sqlite3.dll; stop that process (only) and rerun.
+

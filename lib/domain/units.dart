@@ -19,3 +19,13 @@ enum QuantityUnit {
   const QuantityUnit(this.label);
   final String label;
 }
+
+enum DayType { wfh, office, free }
+
+enum MealSlot { marenda, lunch }
+
+enum MealState { planned, prepared, consumed, skipped }
+
+/// recipe = from a recipe, external = eaten elsewhere (e.g. office lunch),
+/// items = built from individual ingredients.
+enum EntryKind { recipe, external, items }
