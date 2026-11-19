@@ -12,6 +12,7 @@ class SettingKeys {
   static const maxConsecutive = 'planner.maxConsecutive';
   static const multiDayChance = 'planner.multiDayChance'; // 0..1
   static const multiDayMaxDays = 'planner.multiDayMaxDays';
+  static const leftoversOnOffice = 'planner.leftoversOnOffice';
   static const categoryTargets = 'planner.categoryTargets'; // JSON {categoryId: perWeek}
 }
 
@@ -38,3 +39,5 @@ class SettingsRepository {
     }
   }
 }
+
+

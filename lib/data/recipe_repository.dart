@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+﻿import 'package:drift/drift.dart';
 
 import '../domain/nutrition.dart';
 import 'db/database.dart';
@@ -101,6 +101,7 @@ class RecipeRepository {
         db.recipeIngredients,
         db.ingredients,
         db.prepBatches,
+        db.mealEntries,
       ]));
 
   Stream<List<RecipeListItem>> watchRecipes() async* {
@@ -119,7 +120,12 @@ class RecipeRepository {
     final slots = await db.select(db.recipeMealTypes).get();
     final ings = {for (final i in await db.select(db.ingredients).get()) i.id: i};
     final lines = await db.select(db.recipeIngredients).get();
-    final batches = await db.select(db.prepBatches).get();
+    // A batch only counts as a preparation once a meal from it was prepared/consumed.
+    final activeEntries = await (db.select(db.mealEntries)
+          ..where((e) => e.batchId.isNotNull() & e.state.isInValues([MealState.prepared, MealState.consumed])))
+        .get();
+    final activeBatchIds = {for (final e in activeEntries) e.batchId!};
+    final batches = (await db.select(db.prepBatches).get()).where((b) => activeBatchIds.contains(b.id)).toList();
 
     final catsBy = <int, Set<int>>{};
     for (final c in cats) {
@@ -300,3 +306,4 @@ class RecipeRepository {
     return true;
   }
 }
+

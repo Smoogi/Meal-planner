@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/db/database.dart';
 import '../data/meal_repository.dart';
+import '../data/planner_service.dart';
+import '../data/planner_settings.dart';
 import '../data/recipe_repository.dart';
 import '../data/settings_repository.dart';
 
@@ -53,3 +55,15 @@ final categoriesProvider = StreamProvider<List<Category>>(
 
 final ingredientsProvider = StreamProvider<List<Ingredient>>(
     (ref) => ref.watch(recipeRepositoryProvider).watchIngredients());
+
+final plannerSettingsProvider = Provider<PlannerSettings>(
+    (ref) => PlannerSettings.fromMap(ref.watch(settingsProvider).value ?? const {}));
+
+final plannerServiceProvider = Provider((ref) => PlannerService(
+    ref.watch(databaseProvider),
+    ref.watch(recipeRepositoryProvider),
+    ref.watch(mealRepositoryProvider)));
+
+/// First day of week from settings (1 = Monday ... 7 = Sunday).
+final firstDayOfWeekProvider = Provider<int>((ref) =>
+    int.tryParse((ref.watch(settingsProvider).value ?? const {})['calendar.firstDayOfWeek'] ?? '') ?? 1);
