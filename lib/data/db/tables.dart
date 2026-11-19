@@ -1,7 +1,8 @@
-import 'package:drift/drift.dart';
+﻿import 'package:drift/drift.dart';
 
-/// Base unit an ingredient's nutrition values refer to.
-enum BaseUnit { gram, milliliter, piece }
+import '../../domain/units.dart';
+
+export '../../domain/units.dart';
 
 enum DayType { wfh, office, free }
 
@@ -48,15 +49,13 @@ class Recipes extends Table {
 }
 
 class RecipeIngredients extends Table {
+  IntColumn get id => integer().autoIncrement()();
   IntColumn get recipeId =>
       integer().references(Recipes, #id, onDelete: KeyAction.cascade)();
   IntColumn get ingredientId => integer().references(Ingredients, #id)();
   RealColumn get quantity => real()();
-  IntColumn get unit => intEnum<BaseUnit>()();
+  IntColumn get unit => intEnum<QuantityUnit>()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
-
-  @override
-  Set<Column> get primaryKey => {recipeId, ingredientId};
 }
 
 class Categories extends Table {
@@ -143,7 +142,7 @@ class MealEntryItems extends Table {
       integer().references(MealEntries, #id, onDelete: KeyAction.cascade)();
   TextColumn get name => text()();
   RealColumn get quantity => real()();
-  IntColumn get unit => intEnum<BaseUnit>()();
+  IntColumn get unit => intEnum<QuantityUnit>()();
   RealColumn get kcal => real().nullable()();
   RealColumn get protein => real().nullable()();
   RealColumn get carbs => real().nullable()();
@@ -157,3 +156,4 @@ class AppSettings extends Table {
   @override
   Set<Column> get primaryKey => {key};
 }
+

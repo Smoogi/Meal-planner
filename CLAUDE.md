@@ -1,4 +1,4 @@
-# CLAUDE.md — Smoogi Meal Planner
+﻿# CLAUDE.md â€” Smoogi Meal Planner
 
 Personal, offline-first meal planning / recipe / calorie tracking app (Flutter, Android-first).
 Single user, no accounts, cloud, analytics or ads. All UI text in English. Material 3, light/dark.
@@ -7,10 +7,10 @@ Update this file whenever an architectural or release-process decision changes.
 ## Workflow rules
 - Work in phases; get approval before starting a new phase. Avoid unnecessary dependencies.
 - Phases: 1 Foundation, 2 Recipes, 3 Calendar, 4 Smart Planner, 5 Calories, 6 Settings/Backup, 7 Polish/Release.
-- Current status: **Phase 1 complete** (shell, DB schema, themes, signing config, release script).
+- Current status: **Phases 1-2 complete** (shell/DB/signing/release script; recipes, ingredients, categories, nutrition math, images).
 
 ## Architecture
-- Layers: `lib/data` (Drift DB, DAOs/repos) → `lib/domain` (pure Dart: nutrition, units, planner engine; no Flutter imports) → `lib/features/<tab>` (UI + Riverpod providers). `lib/app` = shell, theme, providers.
+- Layers: `lib/data` (Drift DB, DAOs/repos) â†’ `lib/domain` (pure Dart: nutrition, units, planner engine; no Flutter imports) â†’ `lib/features/<tab>` (UI + Riverpod providers). `lib/app` = shell, theme, providers.
 - State: `flutter_riverpod` (v3, use `Notifier`, not `StateProvider`). Navigation: `go_router` StatefulShellRoute + M3 `NavigationBar` (Recipes, Planner, Calendar, Calories, Settings).
 - DB: Drift/SQLite (`lib/data/db/tables.dart`, `database.dart`; generated `database.g.dart` IS committed). After editing tables run `dart run build_runner build --delete-conflicting-outputs`, bump `schemaVersion`, add an `onUpgrade` step.
 - Dates are stored as local `yyyy-MM-dd` text (no timezone/DST bugs).
@@ -62,3 +62,8 @@ flutter build apk --release
 
 ## Testing requirements
 Unit tests for: nutrition calculation & unit conversion, planner constraints (cooldown, suitability, category balancing, relaxation, seeded determinism), schedule overrides, leftovers/batches, historical snapshots, backup/restore. Run `flutter analyze` and `flutter test` before every commit.
+
+
+## Testing pitfalls
+- Drift/real async I/O does not run inside widget-test fake-async: widget tests must stub data providers (see test/widget_test.dart); DB logic is tested with AppDatabase.forTesting(NativeDatabase.memory()) in plain tests.
+- A hung test can leave lutter_tester.exe holding uild\native_assets\windows\sqlite3.dll; stop that process (only) and rerun.

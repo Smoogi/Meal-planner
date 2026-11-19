@@ -1,6 +1,7 @@
-import 'package:drift/drift.dart';
+﻿import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import '../seed_ingredients.dart';
 import 'tables.dart';
 
 export 'tables.dart';
@@ -69,6 +70,7 @@ class AppDatabase extends _$AppDatabase {
           CategoriesCompanion.insert(
               name: defaultCategories[i], sortOrder: Value(i)),
       ]);
+      b.insertAll(ingredients, seedIngredients);
       // Mon-Fri alternating WFH/Office, weekend free (user-editable).
       const week = [
         DayType.wfh,
@@ -86,3 +88,4 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 }
+
