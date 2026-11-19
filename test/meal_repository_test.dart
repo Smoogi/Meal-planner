@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' show Value;
+import 'package:meal_planner/domain/nutrition.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_planner/data/db/database.dart';
@@ -150,8 +151,35 @@ void main() {
       expect(all.firstWhere((e) => e.date == '2026-11-21').locked, isFalse);
     });
 
-    test('unused Value import guard', () {
-      expect(const Value(1).value, 1);
+    test('entry built from ingredients stores items and a summed snapshot', () async {
+      final rice = (await (db.select(db.ingredients)..where((i) => i.name.equals('Rice (dry)'))).getSingle());
+      final id = await meals.addItemsEntry(
+        date: '2026-11-22',
+        slot: MealSlot.lunch,
+        title: 'Rice',
+        total: const Nutrition(kcal: 360, protein: 7, carbs: 79, fat: 0.6),
+        items: [
+          (entryId) => MealEntryItemsCompanion.insert(
+              entryId: entryId, name: rice.name, quantity: 100, unit: QuantityUnit.g, kcal: const Value(360)),
+        ],
+      );
+      final e = (await meals.getEntry(id))!;
+      expect(e.kind, EntryKind.items);
+      expect(e.kcal, 360);
+      expect((await db.select(db.mealEntryItems).get()).single.name, 'Rice (dry)');
+      // deleting the entry removes its items
+      await meals.deleteEntry(id);
+      expect(await db.select(db.mealEntryItems).get(), isEmpty);
+    });
+
+    test('recorded calories count consumed meals only', () async {
+      final r = await bolognese();
+      await meals.addRecipeEntry(date: '2026-11-23', slot: MealSlot.lunch, recipeId: r);
+      final c = await meals.addExternalEntry(date: '2026-11-23', slot: MealSlot.marenda, title: 'Snack', kcal: 200);
+      final all = await meals.entriesBetween('2026-11-23', '2026-11-23');
+      final recorded = all.where((e) => e.state == MealState.consumed).fold<double>(0, (s, e) => s + (e.kcal ?? 0));
+      expect(recorded, 200);
+      expect((await meals.getEntry(c))!.state, MealState.consumed);
     });
   });
 }
