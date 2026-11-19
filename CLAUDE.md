@@ -1,0 +1,64 @@
+# CLAUDE.md — Smoogi Meal Planner
+
+Personal, offline-first meal planning / recipe / calorie tracking app (Flutter, Android-first).
+Single user, no accounts, cloud, analytics or ads. All UI text in English. Material 3, light/dark.
+Update this file whenever an architectural or release-process decision changes.
+
+## Workflow rules
+- Work in phases; get approval before starting a new phase. Avoid unnecessary dependencies.
+- Phases: 1 Foundation, 2 Recipes, 3 Calendar, 4 Smart Planner, 5 Calories, 6 Settings/Backup, 7 Polish/Release.
+- Current status: **Phase 1 complete** (shell, DB schema, themes, signing config, release script).
+
+## Architecture
+- Layers: `lib/data` (Drift DB, DAOs/repos) → `lib/domain` (pure Dart: nutrition, units, planner engine; no Flutter imports) → `lib/features/<tab>` (UI + Riverpod providers). `lib/app` = shell, theme, providers.
+- State: `flutter_riverpod` (v3, use `Notifier`, not `StateProvider`). Navigation: `go_router` StatefulShellRoute + M3 `NavigationBar` (Recipes, Planner, Calendar, Calories, Settings).
+- DB: Drift/SQLite (`lib/data/db/tables.dart`, `database.dart`; generated `database.g.dart` IS committed). After editing tables run `dart run build_runner build --delete-conflicting-outputs`, bump `schemaVersion`, add an `onUpgrade` step.
+- Dates are stored as local `yyyy-MM-dd` text (no timezone/DST bugs).
+
+## Key decisions
+- **`meal_entries` is the single source of truth** for Planner, Calendar and Calories. States: planned/prepared/consumed/skipped. Planned never counts as consumed calories.
+- **Nutrition snapshots** are stored on the entry (kcal/protein/carbs/fat, title) so recipe edits never rewrite history. Recipe deletion sets `recipe_id` NULL (snapshot stays).
+- Leftovers = entries with `batch_id` + `is_leftover`; they do not count as a new preparation or reset cooldown. Remaining portions are derived from `prep_batches.portions_made` minus linked entries.
+- Never assume ml == g or a fixed weight per piece: use ingredient `gramsPerMl` / `gramsPerPiece`; if missing, flag recipe nutrition as incomplete.
+- Calories UI says "Recorded Calories" (partial tracking: mostly Marenda + Lunch).
+- Planner = pure seeded weighted-random engine with relaxation ladder and a report of relaxed preferences.
+- Backup = zip of DB + images + manifest (schema version). Image paths stored relative.
+
+## Repository / Git
+- Repo: https://github.com/Smoogi/Meal-planner (owner Smoogi), branch `main`. Local: `C:\Meal-planner`.
+- Git identity (local config): name `dev`, email `dev@local`. **No Claude co-author lines in commits.**
+- Never force-push or overwrite remote history.
+
+## GitHub CLI (Windows)
+- `gh` may not be on PATH. In PowerShell: `$env:PATH = "$env:LOCALAPPDATA\Programs\gh\bin;$env:PATH"`
+- Check with `gh auth status` (authenticated as Smoogi, credentials in Windows credential manager). If expired, ask the user to run `gh auth login`. Never ask for or store passwords/tokens.
+
+## Build & test
+```
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --release
+```
+- Android Studio JBR may be needed: `JAVA_HOME=C:\Program Files\Android\Android Studio\jbr` (release script auto-detects).
+- Application ID: `com.smoogi.mealplanner` (final, never change). Flutter project, not a native Android project: do not use native Gradle habits.
+
+## Versioning
+- Single source: `version: X.Y.Z+N` in `pubspec.yaml` (X.Y.Z = versionName, N = versionCode). Every release must increment N; the release script does it.
+
+## Android signing
+- Release key is private and NEVER committed. `android/key.properties` (gitignored) holds `storePassword`, `keyPassword`, `keyAlias`, `storeFile` (path to a keystore outside the repo).
+- `android/app/build.gradle.kts` signs release with it and never falls back to the debug key.
+- **Status: no Meal Planner keystore exists yet.** Do not generate or replace one without user approval. (A `C:\Users\Anon\smoogi-signing\smoogi-release.jks` exists, apparently for another project: do not reuse unless the user says so.)
+- The same key must be used for all future updates; the user must back up the keystore and passwords in at least two secure places (password manager + offline copy). Losing it means users cannot upgrade in place.
+
+## Releasing
+`.\scripts\release.ps1 -Version X.Y.Z` (add `-DryRun` to validate only). It checks clean tree on `main`, remote, gh auth, toolchain, signing, runs analyze + tests, bumps pubspec, builds the signed APK, writes `release-out/meal-planner-X.Y.Z.apk` + `.sha256` + notes, asks for typed confirmation, commits only `pubspec.yaml`, pushes `main`, runs `gh release create vX.Y.Z ... --repo Smoogi/Meal-planner`, then verifies the release on GitHub. It refuses if the tag/release exists. Never report success unless the script printed SUCCESS.
+
+## Windows / PowerShell pitfalls
+- Git/Gradle/Flutter write progress to stderr; PowerShell 5.1 may show red NativeCommandError. Judge success by `$LASTEXITCODE` (and e.g. `main -> main` in push output), not stderr.
+- Avoid `2>&1` on native exes in PS 5.1 when checking `$?`.
+- No `&&` in PowerShell 5.1; use `;` with `if ($?)`.
+
+## Testing requirements
+Unit tests for: nutrition calculation & unit conversion, planner constraints (cooldown, suitability, category balancing, relaxation, seeded determinism), schedule overrides, leftovers/batches, historical snapshots, backup/restore. Run `flutter analyze` and `flutter test` before every commit.
