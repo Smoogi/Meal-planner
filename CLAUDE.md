@@ -49,7 +49,7 @@ flutter build apk --release
 ## Android signing
 - Release key is private and NEVER committed. `android/key.properties` (gitignored) holds `storePassword`, `keyPassword`, `keyAlias`, `storeFile` (path to a keystore outside the repo).
 - `android/app/build.gradle.kts` signs release with it and never falls back to the debug key.
-- **Status: no Meal Planner keystore exists yet.** Do not generate or replace one without user approval. (A `C:\Users\Anon\smoogi-signing\smoogi-release.jks` exists, apparently for another project: do not reuse unless the user says so.)
+- **Status: keystore created 2026-11-19** at `C:\Users\Anon\meal-planner-signing\meal-planner-release.jks` (alias `mealplanner`, PKCS12, RSA 2048, valid ~27 years). `android/key.properties` points to it (gitignored). Credentials are also saved in `C:\Users\Anon\meal-planner-signing\key.properties.backup`. NEVER replace or regenerate this key. A different project's `smoogi-release.jks` exists; do not reuse it for this app.
 - The same key must be used for all future updates; the user must back up the keystore and passwords in at least two secure places (password manager + offline copy). Losing it means users cannot upgrade in place.
 
 ## Releasing
@@ -85,6 +85,6 @@ Unit tests for: nutrition calculation & unit conversion, planner constraints (co
 - Settings are key/value strings in `app_settings` (keys in `SettingKeys`); theme, first day of week, calorie target, planner prefs, display toggles. Units are fixed metric/kcal (documented in Settings).
 
 ## Open items before the first release
-- Create the Meal Planner keystore with the user's approval and write `android/key.properties` (see Android signing).
 - Try the app on a real device: image picking, share/restore file picker, calendar density on small screens.
 - Then `.\scripts\release.ps1 -Version 1.0.0 -DryRun` followed by the real run.
+
